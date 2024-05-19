@@ -1,0 +1,31 @@
+service: (variant {Upgrade; Init:record {weight:text; drive_type:text; brochure:text; purchase_price:nat; token:principal; documents:vec record {text; text}; supply_cap:nat; cargo_in_cu_feet:nat32; displays:text; seating:nat16; logo:text; name:text; overall_height:text; description:text; overall_width:text; track_front:text; collection_owner:principal; asset_canister:principal; ground_clearance:text; key_features:vec text; range_per_charge:text; track_rear:text; acceleration:text; charging_speed:text; wheels:text; price:nat; battery:text; overall_length:text; symbol:text; treasury:principal; images:vec text}}) -> {
+    change_ownership: (principal) -> (variant {Ok:nat; Err:text});
+    get_escrow_account: () -> (record {owner:principal; subaccount:vec nat8}) query;
+    get_escrow_balance: () -> (nat) query;
+    get_metadata: () -> (record {weight:text; drive_type:text; brochure:text; purchase_price:nat; token:principal; documents:vec record {text; text}; supply_cap:nat; cargo_in_cu_feet:nat32; displays:text; seating:nat16; logo:text; name:text; overall_height:text; description:text; overall_width:text; track_front:text; collection_owner:principal; asset_canister:principal; ground_clearance:text; key_features:vec text; range_per_charge:text; track_rear:text; acceleration:text; charging_speed:text; wheels:text; price:nat; battery:text; overall_length:text; total_supply:nat; symbol:text; treasury:principal; images:vec text}) query;
+    icrc61_supported_standards: () -> (vec record {url:text; name:text}) query;
+    icrc7_atomic_batch_transfers: () -> (opt bool) query;
+    icrc7_balance_of: (vec record {owner:principal; subaccount:opt vec nat8}) -> (vec nat) query;
+    icrc7_collection_metadata: () -> (vec record {text; variant {Int:int; Map:vec record {text; variant {Int:int; Nat:nat; Blob:vec nat8; Text:text}}; Nat:nat; Blob:vec nat8; Text:text; Array:vec variant {Int:int; Nat:nat; Blob:vec nat8; Text:text}}}) query;
+    icrc7_description: () -> (opt text) query;
+    icrc7_logo: () -> (opt text) query;
+    icrc7_max_default_take_value: () -> (opt nat) query;
+    icrc7_max_memo_size: () -> (opt nat) query;
+    icrc7_max_query_batch_size: () -> (opt nat) query;
+    icrc7_max_take_value: () -> (opt nat) query;
+    icrc7_max_update_batch_size: () -> (opt nat) query;
+    icrc7_name: () -> (text) query;
+    icrc7_owner_of: (vec nat) -> (vec opt record {owner:principal; subaccount:opt vec nat8}) query;
+    icrc7_permitted_drift: () -> (opt nat) query;
+    icrc7_supply_cap: () -> (opt nat) query;
+    icrc7_symbol: () -> (text) query;
+    icrc7_token_metadata: (vec nat) -> (vec opt vec record {text; variant {Int:int; Map:vec record {text; variant {Int:int; Nat:nat; Blob:vec nat8; Text:text}}; Nat:nat; Blob:vec nat8; Text:text; Array:vec variant {Int:int; Nat:nat; Blob:vec nat8; Text:text}}}) query;
+    icrc7_tokens: (opt nat, opt nat) -> (vec nat) query;
+    icrc7_tokens_of: (record {owner:principal; subaccount:opt vec nat8}, opt nat, opt nat) -> (vec nat) query;
+    icrc7_total_supply: () -> (nat) query;
+    icrc7_transfer: (vec record {to:record {owner:principal; subaccount:opt vec nat8}; token_id:nat; memo:opt vec nat8; from_subaccount:opt vec nat8; created_at_time:opt nat64}) -> (vec opt variant {Ok:nat; Err:variant {GenericError:record {message:text; error_code:nat}; Duplicate:record {duplicate_of:nat}; NonExistingTokenId; Unauthorized; CreatedInFuture:record {ledger_time:nat64}; InvalidRecipient; GenericBatchError:record {message:text; error_code:nat}; TooOld}});
+    icrc7_tx_window: () -> (opt nat) query;
+    mint: (record {subaccount:opt vec nat8; quantity:nat}) -> (variant {Ok:vec nat; Err:text});
+    refund: (record {subaccount:opt vec nat8}) -> (variant {Ok:bool; Err:text});
+    update_metadata: (record {weight:opt text; drive_type:opt text; brochure:opt text; purchase_price:opt nat; token:opt principal; documents:opt vec record {text; text}; supply_cap:opt nat; cargo_in_cu_feet:opt nat32; displays:opt text; seating:opt nat16; logo:opt text; name:opt text; overall_height:opt text; description:opt text; overall_width:opt text; track_front:opt text; asset_canister:opt principal; ground_clearance:opt text; key_features:opt vec text; range_per_charge:opt text; track_rear:opt text; acceleration:opt text; charging_speed:opt text; wheels:opt text; price:opt nat; battery:opt text; overall_length:opt text; symbol:opt text; treasury:opt principal; images:opt vec text}) -> (variant {Ok:nat; Err:text});
+}

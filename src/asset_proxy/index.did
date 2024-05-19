@@ -1,0 +1,10 @@
+service: (opt variant {Upgrade; Init}) -> {
+    approve_files: (record {files:vec text; asset_canister:principal}) -> (variant {Ok:bool; Err:text});
+    get_provision_canister: () -> (principal) query;
+    get_temp_asset_canister: () -> (principal) query;
+    prune: (vec text) -> (variant {Ok:bool; Err:text});
+    reject_files: (vec text) -> (variant {Ok:bool; Err:text});
+    set_provision_canister: (principal) -> (variant {Ok:bool; Err:text});
+    set_temp_asset_canister: (principal) -> (variant {Ok:bool; Err:text});
+    store: (record {key:text; content:vec nat8; sha256:opt vec nat8; content_type:text; content_encoding:text}) -> (variant {Ok:bool; Err:text});
+}

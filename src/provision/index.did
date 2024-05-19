@@ -1,0 +1,19 @@
+service: (opt variant {Upgrade; Init}) -> {
+    add_admin: (principal) -> (variant {Ok:bool; Err:text});
+    add_collection_request: (record {weight:text; drive_type:text; brochure:text; purchase_price:nat; token:principal; documents:vec record {text; text}; supply_cap:nat; cargo_in_cu_feet:nat32; displays:text; seating:nat16; logo:text; name:text; overall_height:text; description:text; overall_width:text; track_front:text; ground_clearance:text; key_features:vec text; range_per_charge:text; track_rear:text; acceleration:text; charging_speed:text; wheels:text; price:nat; battery:text; overall_length:text; symbol:text; treasury:principal; images:vec text}) -> (variant {Ok:nat; Err:text});
+    approve_request: (nat) -> (variant {Ok:record {id:nat; token_canister:principal; asset_canister:principal}; Err:text});
+    get_asset_canister_wasm: () -> (record {moduleHash:vec nat8; chunkHashes:vec vec nat8}) query;
+    get_asset_proxy_canister: () -> (principal) query;
+    get_pending_requests: () -> (vec nat) query;
+    get_request_info: (nat) -> (opt record {metadata:opt record {weight:text; drive_type:text; brochure:text; purchase_price:nat; token:principal; documents:vec record {text; text}; supply_cap:nat; cargo_in_cu_feet:nat32; displays:text; seating:nat16; logo:text; name:text; overall_height:text; description:text; overall_width:text; track_front:text; ground_clearance:text; key_features:vec text; range_per_charge:text; track_rear:text; acceleration:text; charging_speed:text; wheels:text; price:nat; battery:text; overall_length:text; symbol:text; treasury:principal; images:vec text}; token_canister:opt principal; approval_status:variant {Approved; Rejected; Pending}; collection_owner:principal; asset_canister:opt principal}) query;
+    get_token_canister_wasm: () -> (record {moduleHash:vec nat8; chunkHashes:vec vec nat8}) query;
+    is_admin: (opt principal) -> (bool) query;
+    list_collections: () -> (vec record {id:nat; token_canister:principal; asset_canister:principal}) query;
+    reject_request: (nat) -> (variant {Ok:bool; Err:text});
+    remove_admin: (principal) -> (variant {Ok:bool; Err:text});
+    set_asset_canister_wasm: (record {moduleHash:vec nat8; chunkHashes:vec vec nat8}) -> (variant {Ok:bool; Err:text});
+    set_asset_proxy_canister: (principal) -> (variant {Ok:bool; Err:text});
+    set_token_canister_wasm: (record {moduleHash:vec nat8; chunkHashes:vec vec nat8}) -> (variant {Ok:bool; Err:text});
+    upgrade_token_canister: (principal) -> (variant {Ok:bool; Err:text});
+    upgrade_token_canisters: () -> (variant {Ok:bool; Err:text});
+}

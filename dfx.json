@@ -1,0 +1,64 @@
+{
+  "canisters": {
+    "token": {
+      "type": "custom",
+      "main": "src/token/index.ts",
+      "candid": "src/token/index.did",
+      "build": "npx azle token",
+      "wasm": ".azle/token/token.wasm",
+      "gzip": true,
+      "declarations": {
+        "output": "test/dfx_generated/token",
+        "node_compatibility": true
+      }
+    },
+    "provision": {
+      "type": "custom",
+      "main": "src/provision/index.ts",
+      "candid": "src/provision/index.did",
+      "build": "npx azle provision",
+      "wasm": ".azle/provision/provision.wasm",
+      "gzip": true,
+      "declarations": {
+        "output": "test/dfx_generated/provision",
+        "node_compatibility": true
+      }
+    },
+    "asset": {
+      "type": "custom",
+      "main": "",
+      "build": "",
+      "candid": "src/asset/index.did",
+      "candid_gen": "custom",
+      "wasm": "test/asset-canister/assetstorage.wasm.gz",
+      "declarations": {
+        "output": "test/dfx_generated/asset",
+        "node_compatibility": true
+      }
+    },
+    "asset_proxy": {
+      "type": "custom",
+      "main": "src/asset_proxy/index.ts",
+      "candid": "src/asset_proxy/index.did",
+      "build": "npx azle asset_proxy",
+      "wasm": ".azle/asset_proxy/asset_proxy.wasm",
+      "gzip": true,
+      "declarations": {
+        "output": "test/dfx_generated/asset_proxy",
+        "node_compatibility": true
+      }
+    },
+    "icp_ledger": {
+      "type": "custom",
+      "main": "",
+      "build": "",
+      "candid": "src/icp_ledger/index.did",
+      "candid_gen": "custom",
+      "wasm": "test/ledger-canister/ledger.wasm.gz",
+      "declarations": {
+        "output": "test/dfx_generated/icp_ledger",
+        "node_compatibility": true
+      }
+    }
+  }
+}

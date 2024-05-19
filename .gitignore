@@ -1,0 +1,8 @@
+.azle
+.dfx
+dfx_generated
+node_modules
+pocket-ic
+asset-canister
+ledger-canister
+secrets
