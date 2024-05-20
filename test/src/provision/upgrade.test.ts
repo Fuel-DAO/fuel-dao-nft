@@ -4,6 +4,7 @@ import { IDL } from "@dfinity/candid";
 import { provisionFixture, initTestSuite, managementActor } from "../utils/pocket-ic";
 import { provisionInit } from "../utils/canister";
 import { SampleCollectionRequest } from "../utils/sample";
+import { expectResultIsOk } from "../utils/common";
 
 describe("provision Upgrade Check", () => {
   const suite = initTestSuite();
@@ -108,6 +109,16 @@ describe("provision Upgrade Check", () => {
 
       const pendingRequests = await provision.actor.get_pending_requests();
       expect(pendingRequests).toHaveLength(1);
+
+      const addCollectionAfterUpgradeResult = await provision.actor.add_collection_request({
+        ...(SampleCollectionRequest),
+        name: "Test Token 2"
+      });
+      expectResultIsOk(addCollectionAfterUpgradeResult);
+      expect(addCollectionAfterUpgradeResult.Ok).toBe(2n);
+
+      const pendingRequestsAfterCollectionRequest = await provision.actor.get_pending_requests();
+      expect(pendingRequestsAfterCollectionRequest).toHaveLength(2);
     });
   });
 });

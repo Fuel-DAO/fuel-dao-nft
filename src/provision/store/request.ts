@@ -68,6 +68,7 @@ export class RequestStore implements Store {
 
   serialize(): string | undefined {
     const toSerialize = {
+      counter: this._counter,
       metadata: [] as [nat, CollectionRequestMetadata][],
       config: [] as [nat, RequestConfig][],
     };
@@ -87,9 +88,11 @@ export class RequestStore implements Store {
     const {
       metadata,
       config,
+      counter,
     }: {
       metadata: [nat, CollectionRequestMetadata][];
       config: [nat, RequestConfig][];
+      counter: nat
     } = JSON.parse(serialized, jsonReviver);
 
     metadata.forEach(([key, val]) => {
@@ -99,5 +102,7 @@ export class RequestStore implements Store {
     config.forEach(([key, val]) => {
       this._requestConfig.set(key, val);
     });
+
+    this._counter = counter;
   }
 }
