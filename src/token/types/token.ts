@@ -57,3 +57,9 @@ export const EscrowAccount = Record({
   subaccount: Subaccount,
 });
 export type EscrowAccount = typeof EscrowAccount.tsType;
+
+export const GetEscrowAccountResult = Record({
+  account: EscrowAccount,
+  accountId: text,
+})
+export type GetEscrowAccountResult = typeof GetEscrowAccountResult.tsType;

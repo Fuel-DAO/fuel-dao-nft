@@ -3,15 +3,24 @@ import { deriveSubaccount } from "../../common/token";
 import { validateInvestor } from "../validate";
 import { getTokenLedger, TRANSFER_FEE } from "../../common/ledger";
 import { MetadataStore, TokenStore } from "../store";
-import { Account, EscrowAccount, MintArg, RefundArg, Subaccount } from "../types";
+import { Account, EscrowAccount, GetEscrowAccountResult, MintArg, RefundArg, Subaccount } from "../types";
+import { AccountIdentifier, SubAccount } from "@dfinity/ledger-icp";
 
-export function get_escrow_account(): EscrowAccount {
+export function get_escrow_account(): GetEscrowAccountResult {
   const principal = ic.id();
   const subaccount = deriveSubaccount(ic.caller());
 
+  const accountIdentifier = AccountIdentifier.fromPrincipal({
+    principal,
+    subAccount: SubAccount.fromBytes(subaccount) as SubAccount
+  });
+
   return {
-    owner: principal,
-    subaccount: subaccount,
+    account: {
+      owner: principal,
+      subaccount: subaccount, 
+    },
+    accountId: accountIdentifier.toHex()
   };
 }
 

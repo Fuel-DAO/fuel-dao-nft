@@ -5,6 +5,7 @@ import { expectResultIsErr, expectResultIsOk } from "../utils/common";
 import { Result, nat } from "azle";
 import { SubAccount } from "../../dfx_generated/icp_ledger/icp_ledger.did";
 import { deriveSubaccount } from "../../../src/common/token";
+import { AccountIdentifier } from "@dfinity/ledger-icp";
 
 const TOKEN_PRICE = 100000n;
 const TRANSFER_FEE = 10_000n;
@@ -67,8 +68,8 @@ describe("Token", () => {
     const escrowAccount = await tokenActor.get_escrow_account();
     const derivedSubaccount = deriveSubaccount(account.getPrincipal());
 
-    expect(escrowAccount.owner.toString()).toBe(tokenId.toString());
-    expect(escrowAccount.subaccount.toString()).toBe(derivedSubaccount.toString());
+    expect(escrowAccount.account.owner.toString()).toBe(tokenId.toString());
+    expect(escrowAccount.account.subaccount.toString()).toBe(derivedSubaccount.toString());
   });
 
   it("get_escrow_balance", async () => {
@@ -77,7 +78,20 @@ describe("Token", () => {
     const escrowAccount = await tokenActor.get_escrow_account();
 
     const depositAmount = 10_000_000n;
-    await mintICPToAccount(depositAmount, escrowAccount.owner, escrowAccount.subaccount);
+
+    icpLedgerActor.setIdentity(minterAccount);
+    icpLedgerActor.transfer({
+      to: AccountIdentifier.fromHex(escrowAccount.accountId).toUint8Array(),
+      fee: {
+        e8s: 0n,
+      },
+      memo: 0n,
+      from_subaccount: [],
+      created_at_time: [],
+      amount: {
+        e8s: depositAmount
+      }
+    });
 
     const escrowBalance = await tokenActor.get_escrow_balance();
     expect(escrowBalance).toBe(depositAmount);
@@ -95,7 +109,7 @@ describe("Token", () => {
     it("success - returns escrow amount back to account", async () => {
       const account = generateRandomIdentity();
       tokenActor.setIdentity(account);
-      const derivedSubaccount = (await tokenActor.get_escrow_account()).subaccount;
+      const derivedSubaccount = (await tokenActor.get_escrow_account()).account.subaccount;
       const REFUND_AMOUNT = 90_000n;
 
       await mintICPToAccount(REFUND_AMOUNT + TRANSFER_FEE, tokenId, derivedSubaccount);
@@ -126,7 +140,7 @@ describe("Token", () => {
     it("fails for invalid escrow balance", async () => {
       const account = generateRandomIdentity();
       tokenActor.setIdentity(account);
-      const escrowSubaccount = (await tokenActor.get_escrow_account()).subaccount;
+      const escrowSubaccount = (await tokenActor.get_escrow_account()).account.subaccount;
 
       // should be at least TOKEN_PRICE + TRANSFER_FEE
       await mintICPToAccount(TOKEN_PRICE, tokenId, escrowSubaccount);
@@ -138,7 +152,7 @@ describe("Token", () => {
 
     it("success", async () => {
       tokenActor.setIdentity(accountA);
-      const subaccount = (await tokenActor.get_escrow_account()).subaccount;
+      const subaccount = (await tokenActor.get_escrow_account()).account.subaccount;
 
       await mintICPToAccount(TOKEN_PRICE * 2n + TRANSFER_FEE, tokenId, subaccount);
 
@@ -166,7 +180,7 @@ describe("Token", () => {
     it("fails on exceeding max supply", async () => {
       const account = generateRandomIdentity();
       tokenActor.setIdentity(account);
-      const escrowSubaccount = (await tokenActor.get_escrow_account()).subaccount;
+      const escrowSubaccount = (await tokenActor.get_escrow_account()).account.subaccount;
 
       await mintICPToAccount(
         TOKEN_PRICE * 2n + TRANSFER_FEE,

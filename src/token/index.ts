@@ -47,6 +47,7 @@ import {
   MetadataQueryResult,
   ICRC7MetadataQueryResult,
   EscrowAccount,
+  GetEscrowAccountResult,
 } from "./types";
 import { init_impl, post_upgrade_impl, pre_upgrade_impl } from "./lifecycle";
 import { icrc61_supported_standards } from "./icrc61";
@@ -88,7 +89,7 @@ export default Canister({
   icrc7_tokens_of: query([Account, Opt(nat), Opt(nat)], Vec(nat), icrc7_tokens_of),
   icrc7_transfer: update([Vec(TransferArg)], Vec(Opt(TransferResult)), icrc7_transfer),
 
-  get_escrow_account: query([], EscrowAccount, get_escrow_account),
+  get_escrow_account: query([], GetEscrowAccountResult, get_escrow_account),
   get_escrow_balance: query([], nat, get_escrow_balance),
   mint: update([MintArg], Result(Vec(nat), text), mint),
   refund: update([RefundArg], Result(bool, text), refund),
