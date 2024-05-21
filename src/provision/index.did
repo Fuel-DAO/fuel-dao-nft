@@ -2,6 +2,7 @@ service: (opt variant {Upgrade; Init}) -> {
     add_admin: (principal) -> (variant {Ok:bool; Err:text});
     add_collection_request: (record {weight:float64; drive_type:text; purchase_price:nat; token:principal; documents:vec record {text; text}; supply_cap:nat; displays:text; seating:text; cargo:float64; logo:text; name:text; overall_height:float64; description:text; overall_width:float64; track_front:float64; ground_clearance:float64; key_features:vec text; range_per_charge:float64; track_rear:float64; acceleration:text; charging_speed:text; wheels:float64; brochure_url:text; price:nat; battery:text; overall_length:float64; symbol:text; treasury:principal; images:vec text}) -> (variant {Ok:nat; Err:text});
     approve_request: (nat) -> (variant {Ok:record {id:nat; token_canister:principal; asset_canister:principal}; Err:text});
+    delete_collection: (nat) -> (variant {Ok:bool; Err:text});
     get_asset_canister_wasm: () -> (record {moduleHash:vec nat8; chunkHashes:vec vec nat8}) query;
     get_asset_proxy_canister: () -> (principal) query;
     get_pending_requests: () -> (vec nat) query;

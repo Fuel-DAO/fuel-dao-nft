@@ -66,6 +66,11 @@ export class RequestStore implements Store {
     this._requestConfig.set(id, config);
   }
 
+  deleteRequest(id: nat) {
+    this._requestMetadata.delete(id);
+    this._requestConfig.delete(id);
+  }
+
   serialize(): string | undefined {
     const toSerialize = {
       counter: this._counter,
