@@ -72,75 +72,54 @@ export async function book_tokens({ quantity }: BookTokensArg): Promise<Result<b
   return Result.Ok(true);
 }
 
-export async function refund_excess_from_escrow(refundAccount: Account): Promise<Result<bool, text>> {
-  const principal = ic.caller();
+export async function refund_from_escrow(user: Principal): Promise<Result<bool, text>> {
+  const icpLedgerIndex = getTokenLedgerIndex(MetadataStore.metadata.index);
   const icpLedger = getTokenLedger(MetadataStore.metadata.token);
-
-  const validationResult = validateInvestor(principal);
-  if (validationResult.Err) return validationResult;
-
-  const escrowSubaccount = deriveSubaccount(principal);
-  const totalInvestedCount = EscrowStore.bookedTokens.get(principal.toText()) ?? 0n;
-  const totalInvestedAmount = get_investment_amount(totalInvestedCount);
-  const escrowBalance = await ic.call(icpLedger.icrc1_balance_of, {
-    args: [
-      {
-        owner: ic.id(),
-        subaccount: Some(escrowSubaccount),
-      },
-    ],
+  const escrowSubaccount = deriveSubaccount(user);
+  const escrowAccountId = AccountIdentifier.fromPrincipal({
+    principal: ic.id(),
+    subAccount: SubAccount.fromBytes(escrowSubaccount) as SubAccount
   });
 
-  const refundAmount = escrowBalance - totalInvestedAmount - TRANSFER_FEE;
-  if ( refundAmount <= 0 ) return Result.Err("No excess in escrow");
+  const indexQueryResult = await ic.call(
+    icpLedgerIndex.get_account_transactions,
+    {
+      args: [{
+        account: {
+          owner: ic.id(),
+          subaccount: Some(escrowSubaccount)
+        },
+        start: None,
+        max_results: 5n,
+      }]
+    }
+  );
 
-  const refundResult = await ic.call(icpLedger.icrc1_transfer, {
-    args: [{
-      from_subaccount: Some(escrowSubaccount),
-      to: refundAccount,
-      amount: refundAmount,
-      fee: Some(TRANSFER_FEE),
-      memo: None,
-      created_at_time: None,
-    }]
-  });
+  if ( indexQueryResult.Err ) return Result.Err(indexQueryResult.Err.message);
 
-  if ( refundResult.Err ) return Result.Err(JSON.stringify(refundResult.Err));
-  return Result.Ok(true);
-}
-
-export async function refund_rejected_from_escrow(refundAccount: Account): Promise<Result<bool, text>> {
-  const principal = ic.caller();
-  const icpLedger = getTokenLedger(MetadataStore.metadata.token);
-
-  const validationResult = validateInvestor(principal);
-  if ( validationResult.Err ) return validationResult;
-  if ( EscrowStore.saleStatus.Rejected === undefined ) return Result.Err("Sale not rejected yet");
-
-  const escrowSubaccount = deriveSubaccount(principal);
-  const escrowBalance = await ic.call(icpLedger.icrc1_balance_of, {
-    args: [
-      {
-        owner: ic.id(),
-        subaccount: Some(escrowSubaccount),
-      },
-    ],
-  });
+  const escrowBalance = indexQueryResult.Ok.balance;
+  const transactions = indexQueryResult.Ok.transactions.map(txn => txn.transaction.operation.Transfer);
+  const refundAccountId = transactions.find(txn => txn && txn.to === escrowAccountId.toHex())?.from;
+  if ( !refundAccountId ) return Result.Err("Txn not found in ledger");
 
   const refundAmount = escrowBalance - TRANSFER_FEE;
-  if ( refundAmount <= 0 ) return Result.Err("No money for refund in escrow");
+  if ( refundAmount <= 0n ) return Result.Ok(true);
 
-  const refundResult = await ic.call(icpLedger.icrc1_transfer, {
+  const transferResult = await ic.call(icpLedger.transfer, {
     args: [{
+      memo: 0n,
+      amount: {
+        e8s: refundAmount,
+      },
+      fee: {
+        e8s: TRANSFER_FEE,
+      },
       from_subaccount: Some(escrowSubaccount),
-      to: refundAccount,
-      amount: refundAmount,
-      fee: Some(TRANSFER_FEE),
-      memo: None,
+      to: AccountIdentifier.fromHex(refundAccountId).toUint8Array(),
       created_at_time: None,
     }]
   });
 
-  if ( refundResult.Err ) return Result.Err(JSON.stringify(refundResult.Err));
+  if ( transferResult.Err ) return Result.Err(JSON.stringify(transferResult.Err));
   return Result.Ok(true);
 }
