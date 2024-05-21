@@ -64,10 +64,16 @@ export async function approve_request(id: nat): Promise<Result<ApproveSuccessRes
     AssetProxyCanisterStore.id,
   );
   if (isErr(grantProxyPermsResult)) return grantProxyPermsResult;
+  
+  const approvedFiles = [
+    ...requestMetadata.documents.map((doc) => doc[1]),
+    ...requestMetadata.images,
+    ...(requestMetadata.logo !== '' ? [requestMetadata.logo] : []),
+  ];
 
   const approveAssetsResult = await approve_files_from_proxy(
     deployAssetResult.Ok,
-    requestMetadata.documents.map((doc) => doc[1]).concat(requestMetadata.images),
+    approvedFiles,
   );
   if (isErr(approveAssetsResult)) return approveAssetsResult;
 
