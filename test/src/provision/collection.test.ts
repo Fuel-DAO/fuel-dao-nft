@@ -1,4 +1,4 @@
-import { provisionActor, initTestSuite } from "../utils/pocket-ic";
+import { provisionActor, initTestSuite, managementActor } from "../utils/pocket-ic";
 import { generateRandomIdentity } from "@hadronous/pic";
 import { expectResultIsErr, expectResultIsOk, isSome } from "../utils/common";
 import { SampleCollectionRequest } from "../utils/sample";
@@ -13,15 +13,20 @@ const testMetadata = {
 };
 
 describe("Collection Requests", () => {
-  let actor: provisionActor;
+  let actor: provisionActor, managementActor: managementActor;
   const suite = initTestSuite();
   const admin = generateRandomIdentity();
+  const controller = generateRandomIdentity();
 
   const draftCollectionCount = 1;
   const publishedCollectionCount = 2;
   const totalCollectionCount = draftCollectionCount + publishedCollectionCount;
 
-  let publishedCollections: any[] = [];
+  let publishedCollections: {
+    id: nat;
+    token_canister: Principal;
+    asset_canister: Principal;
+  }[] = [];
 
   async function seed() {
     const collections = await Promise.all(
@@ -51,11 +56,14 @@ describe("Collection Requests", () => {
 
   beforeAll(async () => {
     await suite.setup();
-    const provision = await suite.deployProvisionCanister();
+    const provision = await suite.deployProvisionCanister({
+      sender: controller.getPrincipal()
+    });
+    provision.actor.setIdentity(controller);
     const assetProxy = await suite.deployAssetProxyCanister();
     const tempAsset = await suite.deployAssetCanister();
 
-    const managementActor = await suite.attachToManagementCanister();
+    managementActor = await suite.attachToManagementCanister();
 
     await configureCanisters(
       {
@@ -82,4 +90,28 @@ describe("Collection Requests", () => {
     const listedCollections = await actor.list_collections();
     expect(listedCollections.sort()).toEqual(publishedCollections.sort());
   });
+
+  describe("delete_collection", () => {
+    it("fails on non-controller", async () => {
+      const account = generateRandomIdentity();
+      const collection = publishedCollections[0];
+      actor.setIdentity(account);
+
+      const result = await actor.delete_collection(collection.id);
+      expectResultIsErr(result);
+    });
+
+    it("success", async () => {
+      const collection = publishedCollections[0];
+
+      const result = await actor.delete_collection(collection.id);
+      expectResultIsOk(result);
+
+      const instance = suite.getInstance();
+      const assetCanisterSubnet = await instance.getCanisterSubnetId(collection.asset_canister);
+      const tokenCanisterSubnet = await instance.getCanisterSubnetId(collection.token_canister);
+      expect(assetCanisterSubnet).toBe(null);
+      expect(tokenCanisterSubnet).toBe(null);
+    });
+  })
 });

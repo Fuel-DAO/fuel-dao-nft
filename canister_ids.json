@@ -5,6 +5,9 @@
   "asset_proxy": {
     "ic": "6ncgq-7yaaa-aaaam-acnua-cai"
   },
+  "icp_ledger": {
+    "ic": "4q7iy-mqaaa-aaaam-acn3q-cai"
+  },
   "provision": {
     "ic": "7amc6-qqaaa-aaaam-acntq-cai"
   }

@@ -40,7 +40,7 @@ import {
   upgrade_token_canisters,
 } from "./canister";
 import { get_asset_proxy_canister, set_asset_proxy_canister } from "./canister/asset_proxy";
-import { list_collections } from "./collection";
+import { delete_collection, list_collections } from "./collection";
 
 export default Canister({
   init: init([Opt(CanisterArgs)], init_impl),
@@ -66,6 +66,7 @@ export default Canister({
   reject_request: update([nat], Result(bool, text), reject_request),
 
   list_collections: query([], Vec(ListCollectionResult), list_collections),
+  delete_collection: update([nat], Result(bool, text), delete_collection),
 
   preUpgrade: preUpgrade(pre_upgrade_impl),
   postUpgrade: postUpgrade([Opt(CanisterArgs)], post_upgrade_impl),
