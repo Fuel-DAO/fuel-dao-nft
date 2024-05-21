@@ -146,6 +146,7 @@ describe("E2E Test", () => {
     expect(metadata.total_supply).toBe(0n);
     expect(metadata.documents).toHaveLength(2);
     expect(metadata.images).toHaveLength(1);
+    expect(metadata.logo).toBe(`https://${assetCanisterId}.icp0.io/logo.txt`);
 
     const files = await assetActor.list({});
     expect(files).toHaveLength(4);
