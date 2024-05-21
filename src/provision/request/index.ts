@@ -77,10 +77,6 @@ export async function approve_request(id: nat): Promise<Result<ApproveSuccessRes
   );
   if (isErr(approveAssetsResult)) return approveAssetsResult;
 
-  if ( requestMetadata.logo !== "" ) {
-    requestMetadata.logo = `https://${deployAssetResult.Ok.toString()}.icp0.io${requestMetadata.logo}`;
-  }
-
   const revokeProxyPermsResult = await revoke_asset_edit_perms(
     deployAssetResult.Ok,
     AssetProxyCanisterStore.id,
@@ -91,6 +87,11 @@ export async function approve_request(id: nat): Promise<Result<ApproveSuccessRes
     ...requestMetadata,
     collection_owner: requestConfig.collection_owner,
     asset_canister: deployAssetResult.Ok,
+
+    ...(
+      requestMetadata.logo !== "" &&
+      { logo: `https://${deployAssetResult.Ok.toString()}.icp0.io${requestMetadata.logo}` }
+    )
   });
   if (isErr(deployTokenResult)) return deployTokenResult;
 
