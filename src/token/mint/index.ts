@@ -1,132 +1,54 @@
-import { None, Opt, Result, Some, Vec, blob, bool, ic, nat, nat32, nat64, text } from "azle";
+import { None, Opt, Principal, Result, Some, Vec, blob, bool, ic, nat, nat32, nat64, text } from "azle";
 import { deriveSubaccount } from "../../common/token";
-import { validateInvestor } from "../validate";
+import { validateCollectionOwner } from "../validate";
 import { getTokenLedger, TRANSFER_FEE } from "../../common/ledger";
-import { MetadataStore, TokenStore } from "../store";
-import { Account, EscrowAccount, GetEscrowAccountResult, MintArg, RefundArg, Subaccount } from "../types";
-import { AccountIdentifier, SubAccount } from "@dfinity/ledger-icp";
+import { EscrowStore, MetadataStore, TokenStore } from "../store";
 
-export function get_escrow_account(): GetEscrowAccountResult {
-  const principal = ic.id();
-  const subaccount = deriveSubaccount(ic.caller());
+export async function accept_sale(): Promise<Result<bool, text>> {
+  const validationResult = validateCollectionOwner(ic.caller());
+  if ( validationResult.Err ) return validationResult;
 
-  const accountIdentifier = AccountIdentifier.fromPrincipal({
-    principal,
-    subAccount: SubAccount.fromBytes(subaccount) as SubAccount
-  });
+  if ( EscrowStore.saleStatus.Live === undefined ) return Result.Err("Sale not live.");
+  EscrowStore.acceptSale();
 
-  return {
-    account: {
-      owner: principal,
-      subaccount: subaccount, 
-    },
-    accountId: accountIdentifier.toHex()
-  };
-}
+  const treasury = MetadataStore.metadata.treasury;
+  const ledger = getTokenLedger(MetadataStore.metadata.token);
+  const bookedTokens = EscrowStore.bookedTokens;
 
-export async function get_escrow_balance(): Promise<nat> {
-  return await ic.call(getTokenLedger(MetadataStore.metadata.token).icrc1_balance_of, {
-    args: [
-      {
-        owner: ic.id(),
-        subaccount: Some(deriveSubaccount(ic.caller())),
-      },
-    ],
-  });
-}
+  for ( const [owner, quantity] of bookedTokens ) {
+    const escrowAccount = deriveSubaccount(Principal.fromText(owner));
+    const userInvestedAmount = quantity * MetadataStore.metadata.price;
 
-export async function refund({
-  subaccount: to_subaccount,
-}: RefundArg): Promise<Result<bool, text>> {
-  const principal = ic.caller();
-  const icpLedger = getTokenLedger(MetadataStore.metadata.token);
-
-  const validationResult = validateInvestor(principal);
-  if (validationResult.Err) return validationResult;
-
-  const subaccount = deriveSubaccount(principal);
-  const escrowBalance = await ic.call(icpLedger.icrc1_balance_of, {
-    args: [
-      {
-        owner: ic.id(),
-        subaccount: Some(subaccount),
-      },
-    ],
-  });
-
-  await ic.call(icpLedger.icrc1_transfer, {
-    args: [
-      {
-        from_subaccount: Some(subaccount),
+    const transferRes = await ic.call(ledger.icrc1_transfer, {
+      args: [{
         to: {
-          owner: principal,
-          subaccount: to_subaccount,
+          owner: treasury,
+          subaccount: None,
         },
-        amount: escrowBalance - TRANSFER_FEE,
+        from_subaccount: Some(escrowAccount),
         fee: Some(TRANSFER_FEE),
         memo: None,
         created_at_time: None,
-      },
-    ],
-  });
+        amount: userInvestedAmount,
+      }]
+    });
+
+    if ( transferRes.Err )
+      return Result.Err(JSON.stringify(transferRes.Err));
+
+    Array(quantity).fill(0n)
+      .forEach(() => TokenStore.mint(owner));
+  }
 
   return Result.Ok(true);
 }
 
-// TODO: Implement memo and created_at_time checks
-export async function mint({
-  subaccount: to_subaccount,
-  quantity,
-}: MintArg): Promise<Result<Vec<nat>, text>> {
-  const principal = ic.caller();
-  const icpLedger = getTokenLedger(MetadataStore.metadata.token);
+export async function reject_sale(): Promise<Result<bool, text>> {
+  const validationResult = validateCollectionOwner(ic.caller());
+  if ( validationResult.Err ) return validationResult;
 
-  if ( quantity <= 0 ) return Result.Err("Quantity should be at least 1.");
+  if ( EscrowStore.saleStatus.Live === undefined ) return Result.Err("Sale not live.");
+  EscrowStore.rejectSale();
 
-  const validationResult = validateInvestor(principal);
-  if (validationResult.Err) return validationResult;
-
-  const subaccount = deriveSubaccount(principal);
-  const escrowBalance = await ic.call(icpLedger.icrc1_balance_of, {
-    args: [
-      {
-        owner: ic.id(),
-        subaccount: Some(subaccount),
-      },
-    ],
-  });
-
-  if (escrowBalance < MetadataStore.metadata.price * quantity + TRANSFER_FEE)
-    return Result.Err("Invalid balance in escrow.");
-
-  if (MetadataStore.config.total_supply + quantity >= MetadataStore.metadata.supply_cap)
-    return Result.Err("Supply cap reached.");
-
-  const quantityInNum = parseInt(quantity.toString());
-  const tokenIds = Array(quantityInNum)
-    .fill(0)
-    .map(() => TokenStore.mint(principal.toString(), to_subaccount.Some));
-
-  try {
-    await ic.call(icpLedger.icrc1_transfer, {
-      args: [
-        {
-          from_subaccount: Some(subaccount),
-          to: {
-            owner: MetadataStore.metadata.treasury,
-            subaccount: None,
-          },
-          amount: MetadataStore.metadata.price * quantity,
-          fee: Some(TRANSFER_FEE),
-          memo: None,
-          created_at_time: None,
-        },
-      ],
-    });
-  } catch (err) {
-    tokenIds.forEach((tokenId) => TokenStore.burn(tokenId));
-    return Result.Err("An error occured while transferring ICP to treasury.");
-  }
-
-  return Result.Ok(tokenIds.map((v) => BigInt(v)));
+  return Result.Ok(true);
 }

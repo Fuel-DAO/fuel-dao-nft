@@ -48,6 +48,7 @@ import {
   ICRC7MetadataQueryResult,
   EscrowAccount,
   GetEscrowAccountResult,
+  BookTokensArg,
 } from "./types";
 import { init_impl, post_upgrade_impl, pre_upgrade_impl } from "./lifecycle";
 import { icrc61_supported_standards } from "./icrc61";
@@ -59,7 +60,8 @@ import {
   icrc7_tokens_of,
   icrc7_transfer,
 } from "./token";
-import { get_escrow_account, get_escrow_balance, mint, refund } from "./mint";
+import { book_tokens, get_booked_tokens, get_escrow_account, get_investment_amount, refund_excess_from_escrow, refund_rejected_from_escrow } from "./escrow";
+import { accept_sale, reject_sale } from "./mint";
 
 export default Canister({
   init: init([CanisterArgs], init_impl),
@@ -90,9 +92,14 @@ export default Canister({
   icrc7_transfer: update([Vec(TransferArg)], Vec(Opt(TransferResult)), icrc7_transfer),
 
   get_escrow_account: query([], GetEscrowAccountResult, get_escrow_account),
-  get_escrow_balance: query([], nat, get_escrow_balance),
-  mint: update([MintArg], Result(Vec(nat), text), mint),
-  refund: update([RefundArg], Result(bool, text), refund),
+  get_booked_tokens: query([Opt(Principal)], nat, get_booked_tokens),
+
+  book_tokens: update([BookTokensArg], Result(bool, text), book_tokens),
+  refund_excess_from_escrow: update([Account], Result(bool, text), refund_excess_from_escrow),
+  refund_rejected_from_escrow: update([Account], Result(bool, text), refund_rejected_from_escrow),
+
+  accept_sale: update([], Result(bool, text), accept_sale),
+  reject_sale: update([], Result(bool, text), reject_sale),
 
   icrc61_supported_standards: query([], ICRC61Standards, icrc61_supported_standards),
 

@@ -27,6 +27,7 @@ export const BaseMetadataRaw = {
   treasury: Principal,
   asset_canister: Principal,
   token: Principal,
+  index: Principal,
 };
 
 export const ExtendedMetadataRaw = {
