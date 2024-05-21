@@ -91,6 +91,14 @@ describe("E2E Test", () => {
       sha256: [],
     });
 
+    await assetProxyActor.store({
+      key: "/logo.txt",
+      content: "Hello Universe".split("").map((v) => v.charCodeAt(0)),
+      content_encoding: "identity",
+      content_type: "text/plain",
+      sha256: [],
+    });
+
     const res = await provisionActor.add_collection_request({
       ...SampleCollectionRequest,
       name: "Test Collection",
@@ -104,6 +112,7 @@ describe("E2E Test", () => {
         ["ownership", "/document_2.txt"],
       ],
       images: ["/image.txt"],
+      logo: "/logo.txt",
     });
     expectResultIsOk(res);
     requestId = res.Ok;
@@ -137,11 +146,12 @@ describe("E2E Test", () => {
     expect(metadata.total_supply).toBe(0n);
     expect(metadata.documents).toHaveLength(2);
     expect(metadata.images).toHaveLength(1);
+    expect(metadata.logo).toBe(`https://${assetCanisterId}.icp0.io/logo.txt`);
 
     const files = await assetActor.list({});
-    expect(files).toHaveLength(3);
+    expect(files).toHaveLength(4);
     expect(files.map((file) => file.key).sort()).toEqual(
-      ["/document_1.txt", "/document_2.txt", "/image.txt"].sort(),
+      ["/document_1.txt", "/document_2.txt", "/image.txt", "/logo.txt"].sort(),
     );
   });
 
