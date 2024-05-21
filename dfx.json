@@ -59,6 +59,18 @@
         "output": "test/dfx_generated/icp_ledger",
         "node_compatibility": true
       }
+    },
+    "icp_ledger_index": {
+      "type": "custom",
+      "main": "",
+      "build": "",
+      "candid": "src/icp_ledger_index/index.did",
+      "candid_gen": "custom",
+      "wasm": "test/index-canister/index.wasm.gz",
+      "declarations": {
+        "output": "test/dfx_generated/icp_ledger_index",
+        "node_compatibility": true
+      }
     }
   }
 }
