@@ -56,14 +56,15 @@ describe("Collection Requests", () => {
 
   beforeAll(async () => {
     await suite.setup();
-    const provision = await suite.deployProvisionCanister({
-      sender: controller.getPrincipal()
-    });
-    provision.actor.setIdentity(controller);
-    const assetProxy = await suite.deployAssetProxyCanister();
-    const tempAsset = await suite.deployAssetCanister();
-
+    const provision = await suite.deployProvisionCanister({ sender: controller.getPrincipal() });
+    const assetProxy = await suite.deployAssetProxyCanister({ sender: controller.getPrincipal() });
+    const tempAsset = await suite.deployAssetCanister({ sender: controller.getPrincipal() });
     managementActor = await suite.attachToManagementCanister();
+
+    provision.actor.setIdentity(controller);
+    assetProxy.actor.setIdentity(controller);
+    tempAsset.actor.setIdentity(controller);
+    managementActor.setIdentity(controller);
 
     await configureCanisters(
       {
@@ -103,6 +104,7 @@ describe("Collection Requests", () => {
 
     it("success", async () => {
       const collection = publishedCollections[0];
+      actor.setIdentity(controller);
 
       const result = await actor.delete_collection(collection.id);
       expectResultIsOk(result);
