@@ -6,18 +6,19 @@ import { tokenInit } from "../utils/canister";
 import { SampleCollectionInit } from "../utils/sample";
 import { deriveSubaccount } from "../../../src/common/token";
 
-const testInitMetadata = {
-  ...SampleCollectionInit,
-  name: "Test Token",
-  symbol: "TEST",
-  price: 100_000n,
-};
-
 describe("token Upgrade Check", () => {
   const suite = initTestSuite();
   let token: tokenFixture;
   const controllerAccount = generateRandomIdentity();
   const userAccount = generateRandomIdentity();
+
+  const testInitMetadata = {
+    ...SampleCollectionInit,
+    name: "Test Token",
+    symbol: "TEST",
+    price: 100_000n,
+    collection_owner: controllerAccount.getPrincipal()
+  };
 
   beforeAll(async () => {
     await suite.setup();
@@ -48,12 +49,10 @@ describe("token Upgrade Check", () => {
       amount: testInitMetadata.price * 2n,
     });
 
-    await token.actor.mint({
-      subaccount: [],
-      quantity: 1n
-    });
+    await token.actor.book_tokens({ quantity: 1n });
 
     token.actor.setIdentity(controllerAccount);
+    await token.actor.accept_sale();
   });
 
   afterAll(suite.teardown);
@@ -75,6 +74,15 @@ describe("token Upgrade Check", () => {
         [],
       );
       expect(userTokens).toHaveLength(1);
+
+      const saleStatus = await token.actor.get_sale_status();
+      expect('Accepted' in saleStatus).toBe(true);
+
+      const bookedTokens = await token.actor.get_total_booked_tokens();
+      expect(bookedTokens).toBe(1n);
+
+      const userBookedCount = await token.actor.get_booked_tokens([userAccount.getPrincipal()]);
+      expect(userBookedCount).toBe(1n);
     });
 
     it("upgrade", async () => {
@@ -103,6 +111,15 @@ describe("token Upgrade Check", () => {
         [],
       );
       expect(userTokens).toHaveLength(1);
+
+      const saleStatus = await token.actor.get_sale_status();
+      expect('Accepted' in saleStatus).toBe(true);
+
+      const bookedTokens = await token.actor.get_total_booked_tokens();
+      expect(bookedTokens).toBe(1n);
+
+      const userBookedCount = await token.actor.get_booked_tokens([userAccount.getPrincipal()]);
+      expect(userBookedCount).toBe(1n);
     });
   });
 });
