@@ -61,7 +61,7 @@ import {
   icrc7_tokens_of,
   icrc7_transfer,
 } from "./token";
-import { book_tokens, get_booked_tokens, get_escrow_account, get_sale_status, get_total_booked_tokens } from "./escrow";
+import { book_tokens, get_booked_tokens, get_escrow_account, get_participating_investors, get_sale_status, get_total_booked_tokens } from "./escrow";
 import { accept_sale, accept_sale_individual, refund_excess_after_sale, reject_sale, reject_sale_individual } from "./mint";
 
 export default Canister({
@@ -96,6 +96,7 @@ export default Canister({
   get_booked_tokens: query([Opt(Principal)], nat, get_booked_tokens),
   get_total_booked_tokens: query([], nat, get_total_booked_tokens),
   get_sale_status: query([], SaleStatus, get_sale_status),
+  get_participating_investors: query([], Vec(text), get_participating_investors),
 
   book_tokens: update([BookTokensArg], Result(bool, text), book_tokens),
 

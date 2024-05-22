@@ -180,4 +180,10 @@ describe("Token", () => {
     const saleStatus = await tokenActor.get_sale_status();
     expect('Live' in saleStatus).toBe(true);
   });
+
+  it("get_participating_investors", async () => {
+    const participatingInvestors = await tokenActor.get_participating_investors();
+    expect(participatingInvestors).toHaveLength(1);
+    expect(participatingInvestors[0]).toBe(investorAccount.getPrincipal().toText());
+  });
 });

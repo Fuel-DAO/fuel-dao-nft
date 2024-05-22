@@ -6,6 +6,7 @@ service: (variant {Upgrade; Init:record {weight:float64; drive_type:text; purcha
     get_booked_tokens: (opt principal) -> (nat) query;
     get_escrow_account: () -> (record {accountId:text; account:record {owner:principal; subaccount:vec nat8}}) query;
     get_metadata: () -> (record {weight:float64; drive_type:text; purchase_price:nat; token:principal; documents:vec record {text; text}; supply_cap:nat; displays:text; seating:text; cargo:float64; logo:text; name:text; overall_height:float64; description:text; overall_width:float64; track_front:float64; collection_owner:principal; asset_canister:principal; ground_clearance:float64; key_features:vec text; range_per_charge:float64; track_rear:float64; acceleration:text; charging_speed:text; wheels:float64; brochure_url:text; index:principal; price:nat; battery:text; overall_length:float64; total_supply:nat; symbol:text; treasury:principal; images:vec text}) query;
+    get_participating_investors: () -> (vec text) query;
     get_sale_status: () -> (variant {Live; Rejected; Accepted}) query;
     get_total_booked_tokens: () -> (nat) query;
     icrc61_supported_standards: () -> (vec record {url:text; name:text}) query;
