@@ -140,4 +140,26 @@ describe("Token", () => {
       expect(bookRes.Err).toBe("Sale not live.");
     });
   });
+
+  describe("accept_sale_individual", () => {
+    it("fails - for non-owner", async () => {
+      const account = generateRandomIdentity();
+      tokenActor.setIdentity(account);
+
+      const bookRes = await tokenActor.accept_sale_individual(investorAccountA.getPrincipal());
+      expectResultIsErr(bookRes);
+      expect(bookRes.Err).toBe("Unauthorized.");
+    });
+  });
+  
+  describe("refund_excess_after_sale", () => {
+    it("fails - for non-owner", async () => {
+      const account = generateRandomIdentity();
+      tokenActor.setIdentity(account);
+
+      const bookRes = await tokenActor.refund_excess_after_sale(investorAccountA.getPrincipal());
+      expectResultIsErr(bookRes);
+      expect(bookRes.Err).toBe("Unauthorized.");
+    });
+  });
 });

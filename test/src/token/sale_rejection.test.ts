@@ -138,4 +138,15 @@ describe("Token", () => {
       expect(bookRes.Err).toBe("Sale not live.");
     });
   });
+
+  describe("reject_sale_individual", () => {
+    it("fails - for non-owner", async () => {
+      const account = generateRandomIdentity();
+      tokenActor.setIdentity(account);
+
+      const bookRes = await tokenActor.reject_sale_individual(investorAccountA.getPrincipal());
+      expectResultIsErr(bookRes);
+      expect(bookRes.Err).toBe("Unauthorized.");
+    });
+  });
 });

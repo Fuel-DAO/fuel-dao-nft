@@ -3,7 +3,7 @@ import { TRANSFER_FEE, getTokenLedger, getTokenLedgerIndex } from "../../common/
 import { EscrowStore, MetadataStore } from "../store";
 import { validateInvestor } from "../validate";
 import { deriveSubaccount } from "../../common/token";
-import { Account, BookTokensArg, GetEscrowAccountResult, SaleStatus } from "../types";
+import { Account, BookTokensArg, GetEscrowAccountResult, RefundResult, SaleStatus } from "../types";
 import { AccountIdentifier, SubAccount } from "@dfinity/ledger-icp";
 
 export function get_escrow_account(): GetEscrowAccountResult {
@@ -71,7 +71,7 @@ export async function book_tokens({ quantity }: BookTokensArg): Promise<Result<b
   return Result.Ok(true);
 }
 
-export async function refund_from_escrow(user: Principal): Promise<Result<bool, text>> {
+export async function refund_from_escrow(user: Principal): Promise<Result<RefundResult, text>> {
   const icpLedgerIndex = getTokenLedgerIndex(MetadataStore.metadata.index);
   const icpLedger = getTokenLedger(MetadataStore.metadata.token);
   const escrowSubaccount = deriveSubaccount(user);
@@ -102,7 +102,7 @@ export async function refund_from_escrow(user: Principal): Promise<Result<bool, 
   if ( !refundAccountId ) return Result.Err("Txn not found in ledger");
 
   const refundAmount = escrowBalance - TRANSFER_FEE;
-  if ( refundAmount <= 0n ) return Result.Ok(true);
+  if ( refundAmount <= 0n ) return Result.Ok({ to: refundAccountId, amount: 0n });
 
   const transferResult = await ic.call(icpLedger.transfer, {
     args: [{
@@ -120,5 +120,5 @@ export async function refund_from_escrow(user: Principal): Promise<Result<bool, 
   });
 
   if ( transferResult.Err ) return Result.Err(JSON.stringify(transferResult.Err));
-  return Result.Ok(true);
+  return Result.Ok({ to: refundAccountId, amount: refundAmount });
 }

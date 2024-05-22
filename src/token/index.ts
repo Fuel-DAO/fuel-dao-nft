@@ -62,7 +62,7 @@ import {
   icrc7_transfer,
 } from "./token";
 import { book_tokens, get_booked_tokens, get_escrow_account, get_sale_status, get_total_booked_tokens } from "./escrow";
-import { accept_sale, reject_sale, reject_sale_individual } from "./mint";
+import { accept_sale, accept_sale_individual, refund_excess_after_sale, reject_sale, reject_sale_individual } from "./mint";
 
 export default Canister({
   init: init([CanisterArgs], init_impl),
@@ -100,8 +100,10 @@ export default Canister({
   book_tokens: update([BookTokensArg], Result(bool, text), book_tokens),
 
   accept_sale: update([], Result(bool, text), accept_sale),
+  accept_sale_individual: update([Principal], Result(bool, text), accept_sale_individual),
   reject_sale: update([], Result(bool, text), reject_sale),
   reject_sale_individual: update([Principal], Result(bool, text), reject_sale_individual),
+  refund_excess_after_sale: update([Principal], Result(bool, text), refund_excess_after_sale),
 
   icrc61_supported_standards: query([], ICRC61Standards, icrc61_supported_standards),
 
