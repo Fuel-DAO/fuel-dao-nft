@@ -8,7 +8,7 @@
     "pocket-ic:setup": "./scripts/setup-pocket-ic.sh",
     "pocket-ic:start": "./test/pocket-ic/pocket-ic --port 7000",
     "test": "./scripts/setup-wasm-for-test.sh && jest",
-    "wasm:setup": "./scripts/download-asset-canister-wasm.sh && ./scripts/download-ledger-canister-wasm.sh"
+    "wasm:setup": "./scripts/download-asset-canister-wasm.sh && ./scripts/download-ledger-canister-wasm.sh && ./scripts/download-index-canister-wasm.sh"
   },
   "dependencies": {
     "@dfinity/assets": "^1.3.0",
