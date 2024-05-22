@@ -7,12 +7,12 @@ export const Account = Record({
 export type Account = typeof Account.tsType;
 
 export const TimeStamp = Record({
-  timestamp_nanos: nat
+  timestamp_nanos: nat64
 });
 export type TimeStamp = typeof TimeStamp.tsType;
 
 export const Tokens = Record({
-  e8s: nat
+  e8s: nat64
 });
 export type Tokens = typeof TimeStamp.tsType;
 
@@ -32,7 +32,7 @@ export const Operation = Variant({
 export type Operation = typeof Operation.tsType;
 
 export const Transaction = Record({
-  memo: nat,
+  memo: nat64,
   icrc1_memo: Opt(Vec(nat8)),
   operation: Operation,
   created_at_time: Opt(TimeStamp),
@@ -56,9 +56,9 @@ export const GetAccountIdentifierTransactionsError = Record({
 export type GetAccountIdentifierTransactionsError = typeof GetAccountIdentifierTransactionsError.tsType;
 
 export const GetAccountIdentifierTransactionsResponse = Record({
-  balance: nat,
+  balance: nat64,
   transactions: Vec(TransactionWithId),
-  oldest_tx_id: Opt(nat),
+  oldest_tx_id: Opt(nat64),
 });
 export type GetAccountIdentifierTransactionsResponse = typeof GetAccountIdentifierTransactionsResponse.tsType;
 

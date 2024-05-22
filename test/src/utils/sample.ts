@@ -7,6 +7,7 @@ export const SampleCollectionInit = {
   price: 100000n,
   treasury: Principal.anonymous(),
   token: Principal.anonymous(),
+  index: Principal.anonymous(),
   asset_canister: Principal.anonymous(),
   collection_owner: Principal.anonymous(),
   weight: 0,
@@ -42,6 +43,7 @@ export const SampleCollectionUpdate = {
   brochure_url: [],
   purchase_price: [],
   token: [],
+  index: [],
   documents: [],
   images: [],
   supply_cap: [],
@@ -74,6 +76,7 @@ export const SampleCollectionRequest = {
   price: 100000n,
   treasury: Principal.anonymous(),
   token: Principal.anonymous(),
+  index: Principal.anonymous(),
 
   weight: 0,
   drive_type: "",

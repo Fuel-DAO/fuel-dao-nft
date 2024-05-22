@@ -29,6 +29,7 @@ import {
   provisionService,
   icpLedgerIndexService,
   icpLedgerIndexIdl,
+  icpLedgerIndexInit,
 } from "./canister";
 import { AccountIdentifier } from "@dfinity/ledger-icp";
 
@@ -153,11 +154,9 @@ export function initTestSuite() {
       instance,
       icpLedgerIndexIdl,
       path.resolve("test", "index-canister", "index.wasm.gz"),
-      IDL.encode(icpLedgerInit({ IDL }), [
+      IDL.encode(icpLedgerIndexInit({ IDL }), [
         {
-          Init: {
-            ledger_id: ledgerPrincipal,
-          }
+          ledger_id: ledgerPrincipal,
         },
       ]),
       args,
@@ -205,6 +204,7 @@ export function initTestSuite() {
     deployAssetCanister,
     deployAssetProxyCanister,
     deployIcpLedgerCanister,
+    deployIcpLedgerIndexCanister,
     attachToTokenCanister,
     attachToAssetCanister,
     attachToManagementCanister,

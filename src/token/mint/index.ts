@@ -37,7 +37,7 @@ export async function accept_sale(): Promise<Result<bool, text>> {
     if ( transferResult.Err )
       return Result.Err(JSON.stringify(transferResult.Err));
 
-    Array(quantity).fill(0n)
+    Array(Number(quantity)).fill(0)
       .forEach(() => TokenStore.mint(investor));
   }
 
