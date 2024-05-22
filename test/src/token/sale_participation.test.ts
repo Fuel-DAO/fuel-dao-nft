@@ -175,4 +175,9 @@ describe("Token", () => {
       expect(res.Err).toBe("Supply cap reached.");
     });
   });
+
+  it("get_sale_status", async () => {
+    const saleStatus = await tokenActor.get_sale_status();
+    expect('Live' in saleStatus).toBe(true);
+  });
 });

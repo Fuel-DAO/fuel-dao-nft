@@ -126,6 +126,11 @@ describe("Token", () => {
     })
   });
 
+  it("get_sale_status", async () => {
+    const saleStatus = await tokenActor.get_sale_status();
+    expect('Accepted' in saleStatus).toBe(true);
+  });
+
   describe("book_tokens", () => {
     it("fails - sale not live", async () => {
       tokenActor.setIdentity(investorAccountA);
