@@ -1,4 +1,4 @@
-import { None, Opt, Principal, Result, Some, bool, ic, nat, text } from "azle";
+import { None, Opt, Principal, Result, Some, Vec, bool, ic, nat, text } from "azle";
 import { TRANSFER_FEE, getTokenLedger, getTokenLedgerIndex } from "../../common/ledger";
 import { EscrowStore, MetadataStore } from "../store";
 import { validateInvestor } from "../validate";
@@ -39,6 +39,15 @@ export function get_sale_status(): SaleStatus {
 
 export function get_investment_amount(amount: nat): nat {
   return MetadataStore.metadata.price * amount + TRANSFER_FEE;
+}
+
+export function get_participating_investors(): Vec<text> {
+  const investors = [] as Vec<text>;
+  for ( const [investor, _] of EscrowStore.bookedTokens ) {
+    investors.push(investor);
+  }
+
+  return investors;
 }
 
 export async function book_tokens({ quantity }: BookTokensArg): Promise<Result<bool, text>> {
