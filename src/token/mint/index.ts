@@ -44,6 +44,44 @@ export async function accept_sale(): Promise<Result<bool, text>> {
   return Result.Ok(true);
 }
 
+export async function accept_sale_individual(investor: Principal): Promise<Result<bool, text>> {
+  const validationResult = validateCollectionOwner(ic.caller());
+  if ( validationResult.Err ) return validationResult;
+  if ( EscrowStore.saleStatus.Accepted === undefined ) return Result.Err("Sale not accepted.");
+
+  const treasury = MetadataStore.metadata.treasury;
+  const ledger = getTokenLedger(MetadataStore.metadata.token);
+  const bookedTokens = EscrowStore.bookedTokens;
+  const quantity = bookedTokens.get(investor.toText());
+
+  if ( !quantity || quantity < 0 ) return Result.Err("Invalid quantity of booked tokens for user.");
+
+  const escrowSubaccount = deriveSubaccount(investor);
+  const userInvestedAmount = quantity * MetadataStore.metadata.price;
+
+  const transferResult = await ic.call(ledger.icrc1_transfer, {
+    args: [{
+      to: {
+        owner: treasury,
+        subaccount: None,
+      },
+      from_subaccount: Some(escrowSubaccount),
+      fee: Some(TRANSFER_FEE),
+      memo: None,
+      created_at_time: None,
+      amount: userInvestedAmount,
+    }]
+  });
+
+  if ( transferResult.Err )
+    return Result.Err(JSON.stringify(transferResult.Err));
+
+  Array(Number(quantity)).fill(0)
+    .forEach(() => TokenStore.mint(investor.toText()));
+
+  return Result.Ok(true);
+}
+
 export async function reject_sale(): Promise<Result<bool, text>> {
   const validationResult = validateCollectionOwner(ic.caller());
   if ( validationResult.Err ) return validationResult;
@@ -70,4 +108,16 @@ export async function reject_sale_individual(investor: Principal): Promise<Resul
   if ( refundResult.Err ) return refundResult;
 
   return Result.Ok(true);
+}
+
+export async function refund_excess_after_sale(investor: Principal): Promise<Result<bool, text>> {
+  const validationResult = validateCollectionOwner(ic.caller());
+  if ( validationResult.Err ) return validationResult;
+  if ( EscrowStore.saleStatus.Live !== undefined ) return Result.Err("Sale is live.");
+
+  const refundResult = await refund_from_escrow(investor);
+  if ( refundResult.Err ) return refundResult;
+
+  return Result.Ok(true);
+  
 }

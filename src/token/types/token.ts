@@ -75,3 +75,9 @@ export const SaleStatus = Variant({
   Rejected: Null,
 });
 export type SaleStatus = typeof SaleStatus.tsType;
+
+export const RefundResult = Record({
+  to: text,
+  amount: nat,
+});
+export type RefundResult = typeof RefundResult.tsType;
