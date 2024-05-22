@@ -185,6 +185,7 @@ describe("E2E Test", () => {
     const collection = collections[0];
     const tokenActor = await suite.attachToTokenCanister(collection.token_canister);
     tokenActor.setIdentity(investorAccount);
+
     const price = (await tokenActor.get_metadata()).price;
     const escrowSubaccount = deriveSubaccount(investorAccount.getPrincipal());
 
@@ -200,23 +201,26 @@ describe("E2E Test", () => {
       amount: 2n * price,
     });
 
-    const subaccount = Array(32).fill(2);
-    const mintRes = await tokenActor.mint({ subaccount: [subaccount], quantity: 1n });
-    expectResultIsOk(mintRes);
+    const bookRes = await tokenActor.book_tokens({ quantity: 1n });
+    expectResultIsOk(bookRes);
 
-    const refundRes = await tokenActor.refund({ subaccount: [subaccount] });
-    expectResultIsOk(refundRes);
+    const bookedTokens = await tokenActor.get_booked_tokens([]);
+    expect(bookedTokens).toBe(1n);
+
+    tokenActor.setIdentity(userAccount);
+    const acceptSaleRes = await tokenActor.accept_sale();
+    expectResultIsOk(acceptSaleRes);
 
     const [tokenBalance] = await tokenActor.icrc7_balance_of([
       {
         owner: investorAccount.getPrincipal(),
-        subaccount: [subaccount],
+        subaccount: [],
       },
     ]);
 
     const icpBalance = await icpLedgerActor.icrc1_balance_of({
       owner: investorAccount.getPrincipal(),
-      subaccount: [subaccount],
+      subaccount: [],
     });
 
     const escrowBalance = await icpLedgerActor.icrc1_balance_of({
@@ -230,8 +234,8 @@ describe("E2E Test", () => {
     });
 
     expect(treasuryBalance).toBe(price);
-    expect(escrowBalance).toBe(0n);
-    expect(icpBalance).toBe(2n * price - price - 2n * TRANSFER_FEE);
+    expect(escrowBalance).toBe(2n * price - price - TRANSFER_FEE);
+    expect(icpBalance).toBe(0n);
     expect(tokenBalance).toBe(1n);
   });
 });

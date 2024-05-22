@@ -5,28 +5,19 @@ import { expectResultIsErr, expectResultIsOk } from "../utils/common";
 import { Result, nat } from "azle";
 import { SubAccount } from "../../dfx_generated/icp_ledger/icp_ledger.did";
 import { deriveSubaccount } from "../../../src/common/token";
-import { AccountIdentifier } from "@dfinity/ledger-icp";
 
 const TOKEN_PRICE = 100000n;
 const TRANSFER_FEE = 10_000n;
 
-function sleep(time: number) {
-  return new Promise((resolve, _) => {
-    setTimeout(resolve, time);
-  });  
-}
-
 describe("Token", () => {
   let tokenActor: tokenActor, icpLedgerActor: icpLedgerActor, icpLedgerIndexActor: icpLedgerIndexActor, tokenId: Principal;
   const suite = initTestSuite();
-  const accountA = generateRandomIdentity();
-  const accountB = generateRandomIdentity();
-  const accountC = generateRandomIdentity();
+  const investorAccountA = generateRandomIdentity();
+  const investorAccountB = generateRandomIdentity();
   const collectionOwner = generateRandomIdentity();
   const minterAccount = generateRandomIdentity();
   const intermediaryMinter = generateRandomIdentity();
   const treasuryAccount = generateRandomIdentity();
-  let mintedTokenId: bigint;
 
   async function mintICPToAccount(amount: nat, principal: Principal, subaccount?: SubAccount) {
     icpLedgerActor.setIdentity(minterAccount);
@@ -84,97 +75,67 @@ describe("Token", () => {
     tokenActor = tokenFixture.actor;
     tokenId = tokenFixture.canisterId;
 
-    tokenActor.setIdentity(accountA);
+    tokenActor.setIdentity(investorAccountA);
     const escrowSubaccountA = (await tokenActor.get_escrow_account()).account.subaccount;
-    await mintICPToAccount(TOKEN_PRICE * 1n + TRANSFER_FEE, tokenId, escrowSubaccountA);
+    await mintICPToAccount(TOKEN_PRICE * 2n + TRANSFER_FEE, tokenId, escrowSubaccountA);
+    await tokenActor.book_tokens({ quantity: 2n });
+    
+    tokenActor.setIdentity(investorAccountB);
+    const escrowSubaccountB = (await tokenActor.get_escrow_account()).account.subaccount;
+    await mintICPToAccount(TOKEN_PRICE * 1n + TRANSFER_FEE, tokenId, escrowSubaccountB);
     await tokenActor.book_tokens({ quantity: 1n });
 
-    tokenActor.setIdentity(collectionOwner);
-    await tokenActor.accept_sale();
-    
-    const userTokens = await tokenActor.icrc7_tokens_of({ owner: accountA.getPrincipal(), subaccount: [] }, [], []);
-    mintedTokenId = userTokens[0];
+    await suite.getInstance().advanceTime(60*60*1000);
   });
 
   afterAll(suite.teardown);
 
-  describe("icrc7_transfer", () => {
-    it("Unauthorized user fails", async () => {
-      tokenActor.setIdentity(accountB);
-      const transferRes = await tokenActor.icrc7_transfer([
-        {
-          to: {
-            owner: accountC.getPrincipal(),
-            subaccount: [],
-          },
-          from_subaccount: [],
-          token_id: mintedTokenId,
-          memo: [],
-          created_at_time: [],
-        },
-      ]);
+  describe("reject_sale", () => {
+    it("fails on non-owner", async () => {
+      tokenActor.setPrincipal(Principal.anonymous());
 
-      expect(transferRes).toHaveLength(1);
-      expect(transferRes[0]).toHaveLength(1);
-      expect((transferRes[0][0] as any).Err.Unauthorized).toBe(null);
-    });
-
-    it("Non-existent token id fails", async () => {
-      tokenActor.setIdentity(accountB);
-      const transferRes = await tokenActor.icrc7_transfer([
-        {
-          to: {
-            owner: accountC.getPrincipal(),
-            subaccount: [],
-          },
-          from_subaccount: [],
-          token_id: 1021n,
-          memo: [],
-          created_at_time: [],
-        },
-      ]);
-
-      expect(transferRes).toHaveLength(1);
-      expect(transferRes[0]).toHaveLength(1);
-      expect((transferRes[0][0] as any).Err.NonExistingTokenId).toBe(null);
-    });
-
-    it("Invalid recipient fails", async () => {
-      tokenActor.setIdentity(accountA);
-      const transferRes = await tokenActor.icrc7_transfer([
-        {
-          to: {
-            owner: accountA.getPrincipal(),
-            subaccount: [],
-          },
-          from_subaccount: [],
-          token_id: mintedTokenId,
-          memo: [],
-          created_at_time: [],
-        },
-      ]);
-
-      expect(transferRes).toHaveLength(1);
-      expect(transferRes[0]).toHaveLength(1);
-      expect((transferRes[0][0] as any).Err.InvalidRecipient).toBe(null);
+      const acceptSaleResult = await tokenActor.reject_sale();
+      expectResultIsErr(acceptSaleResult);
+      expect(acceptSaleResult.Err).toBe("Unauthorized.");
     });
 
     it("success", async () => {
-      tokenActor.setIdentity(accountA);
-      const transferRes = await tokenActor.icrc7_transfer([
-        {
-          to: {
-            owner: accountB.getPrincipal(),
-            subaccount: [],
-          },
-          from_subaccount: [],
-          token_id: mintedTokenId,
-          memo: [],
-          created_at_time: [],
-        },
-      ]);
+      tokenActor.setIdentity(collectionOwner);
+      
+      const rejectSaleResult = await tokenActor.reject_sale();
+      expectResultIsOk(rejectSaleResult);
 
-      expectResultIsOk(transferRes[0][0]!);
+      const treasuryBalance = await icpAccountBalance(treasuryAccount.getPrincipal());
+      expect(treasuryBalance).toBe(0n);
+
+      const intermediaryBalance = await icpAccountBalance(intermediaryMinter.getPrincipal());
+      expect(intermediaryBalance).toBe(3n * TOKEN_PRICE);
+
+      const totalMintedTokens = await tokenActor.icrc7_total_supply();
+      expect(totalMintedTokens).toBe(0n);
+    });
+
+    it("fail on non-live sale", async () => {
+      tokenActor.setIdentity(collectionOwner);
+
+      const acceptSaleResult = await tokenActor.accept_sale();
+      expectResultIsErr(acceptSaleResult);
+      expect(acceptSaleResult.Err).toBe("Sale not live.");
+    })
+  });
+
+  it("get_sale_status", async () => {
+    const saleStatus = await tokenActor.get_sale_status();
+    expect('Rejected' in saleStatus).toBe(true);
+  });
+
+  describe("book_tokens", () => {
+    it("fails - sale not live", async () => {
+      tokenActor.setIdentity(investorAccountA);
+
+      const bookRes = await tokenActor.book_tokens({ quantity: 1n });
+      expectResultIsErr(bookRes);
+      expect(bookRes.Err).toBe("Sale not live.");
     });
   });
 });

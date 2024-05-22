@@ -63,3 +63,15 @@ export const GetEscrowAccountResult = Record({
   accountId: text,
 })
 export type GetEscrowAccountResult = typeof GetEscrowAccountResult.tsType;
+
+export const BookTokensArg = Record({
+  quantity: nat
+});
+export type BookTokensArg = typeof BookTokensArg.tsType;
+
+export const SaleStatus = Variant({
+  Live: Null,
+  Accepted: Null,
+  Rejected: Null,
+});
+export type SaleStatus = typeof SaleStatus.tsType;
