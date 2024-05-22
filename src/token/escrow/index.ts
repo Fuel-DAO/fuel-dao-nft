@@ -52,7 +52,6 @@ export async function book_tokens({ quantity }: BookTokensArg): Promise<Result<b
   if (validationResult.Err) return validationResult;
 
   const subaccount = deriveSubaccount(principal);
-  const totalInvestedCount = EscrowStore.bookedTokens.get(principal.toText()) ?? 0n;
   const escrowBalance = await ic.call(icpLedger.icrc1_balance_of, {
     args: [{
       owner: ic.id(),
@@ -60,10 +59,10 @@ export async function book_tokens({ quantity }: BookTokensArg): Promise<Result<b
     }],
   });
 
+  const totalInvestedCount = EscrowStore.bookedTokens.get(principal.toText()) ?? 0n;
   if ( escrowBalance < (totalInvestedCount + quantity) * MetadataStore.metadata.price + TRANSFER_FEE )
     return Result.Err("Invalid balance in escrow.");
 
-  // > or >=
   if ( EscrowStore.totalBookedTokens + quantity > MetadataStore.metadata.supply_cap )
     return Result.Err("Supply cap reached.");
 
