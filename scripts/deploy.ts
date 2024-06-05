@@ -14,6 +14,7 @@ async function main() {
   const tempAssetCanisterId = Principal.fromText(await deployCanister('asset'));
   const managementCanisterId = Principal.fromText('aaaaa-aa');
   await buildCanister("token");
+  await buildCanister("asset");
 
   const assetProxyActor = createAssetProxyActor(assetProxyCanisterId, { agent });
   const tempAssetActor = createAssetActor(tempAssetCanisterId, { agent });
