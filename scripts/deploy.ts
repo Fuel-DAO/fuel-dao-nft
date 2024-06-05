@@ -10,8 +10,8 @@ import { buildCanister, deployCanister, getAgent, getCanisterId } from "./common
 async function main() {
   const agent = await getAgent();
   const provisionCanisterId = Principal.fromText(await deployCanister('provision'));
-  const assetProxyCanisterId = Principal.fromText(await getCanisterId('asset_proxy'));
-  const tempAssetCanisterId = Principal.fromText(await getCanisterId('asset'));
+  const assetProxyCanisterId = Principal.fromText(await deployCanister('asset_proxy'));
+  const tempAssetCanisterId = Principal.fromText(await deployCanister('asset'));
   const managementCanisterId = Principal.fromText('aaaaa-aa');
   await buildCanister("token");
 

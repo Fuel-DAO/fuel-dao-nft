@@ -39,7 +39,9 @@ export async function deployCanister(canisterName: string) {
   const networkFlag = process.env.DFX_NETWORK === 'ic' ? '--ic' : '';
   await exec(`dfx deploy ${canisterName} ${networkFlag}`);
   const id = await exec(`dfx canister id ${canisterName} ${networkFlag}`);
-  console.log(`Deployed ${canisterName} canister: ${id}`);
+  const canisterInfo = await exec(`dfx canister info ${canisterName} ${networkFlag}`);
+  const moduleHash = canisterInfo.split('\n')[1].split(':')[1].trim();
+  console.log(`Deployed ${canisterName} canister: ${id}; Module Hash: ${moduleHash}`);
 
   return id;
 }
@@ -47,7 +49,8 @@ export async function deployCanister(canisterName: string) {
 export async function buildCanister(canisterName: string) {
   console.log(`Building ${canisterName}...`);
   await exec(`dfx build --check ${canisterName}`);
-  console.log(`Build success for ${canisterName} canister`);
+  const moduleHash = await exec(`sha256sum ./.dfx/local/canisters/${canisterName}/${canisterName}.wasm.gz | awk '{ print $1 }'`);
+  console.log(`Build success for ${canisterName} canister; Module Hash: 0x${moduleHash.trim()}`);
 }
 
 export async function getCanisterId(canisterName: string) {
