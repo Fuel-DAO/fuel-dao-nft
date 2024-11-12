@@ -55,6 +55,9 @@ jobs:
       - name: Generate client
         run: dfx generate
 
+      - name: Check all existing identities
+        run: dfx identity list
+
       - name: Setup env to deploy
         run: |
           printf "%s" "${{ secrets.FUEL_DAO_SNS_CONTROLLER_ADMIN_PRIVATE_KEY }}" > actions_identity.pem
