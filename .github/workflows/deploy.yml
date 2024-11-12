@@ -55,9 +55,6 @@ jobs:
       - name: Generate client
         run: dfx generate
 
-      - name: check controller
-        run: dfx canister --network ic info provision
-
       - name: Deploy infrastructure
         run: DFX_NETWORK=ic IDENTITY_PEM_FILE=./actions_identity.pem npx ts-node ./scripts/deploy.ts
 
