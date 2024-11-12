@@ -55,6 +55,13 @@ jobs:
       - name: Generate client
         run: dfx generate
 
+      - name: Setup env to deploy
+        run: |
+          touch actions_identity.pem
+          echo "${{ secrets.FUEL_DAO_SNS_CONTROLLER_ADMIN_PRIVATE_KEY }}" > actions_identity.pem
+          dfx identity import --storage-mode plaintext actions actions_identity.pem
+          dfx identity use actions
+
       - name: check controller
         run: dfx canister --network ic info provision
 
