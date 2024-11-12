@@ -60,8 +60,8 @@ jobs:
 
       - name: Add admins
         run: |
-          dfx canister --network ic call <canister_name_or_id> add_admin '(principal "acred-4djfc-ledly-qhddc-eugbf-geqcc-w5g2i-dry2j-rce77-vorar-5qe")'
-          dfx canister --network ic call <canister_name_or_id> add_admin '(principal "sc4yh-26dym-j4zht-slasf-p3hsn-um2fc-owekl-eczmy-eptpi-lycpw-zae")'
+          dfx canister --network ic call provision add_admin '(principal "acred-4djfc-ledly-qhddc-eugbf-geqcc-w5g2i-dry2j-rce77-vorar-5qe")'
+          dfx canister --network ic call provision add_admin '(principal "sc4yh-26dym-j4zht-slasf-p3hsn-um2fc-owekl-eczmy-eptpi-lycpw-zae")'
 
       - name: Run test
         run: yarn test
